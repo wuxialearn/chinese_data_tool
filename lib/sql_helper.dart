@@ -1,3 +1,4 @@
+//create a copy of pg_connection_example.dart called pg_connection.dart
 import 'package:chinese_data_tool/pg_connection.dart';
 import 'package:postgres/postgres.dart';
 
@@ -8,6 +9,7 @@ class SQLHelper {
 
   static Future<PostgreSQLConnection> psql() async{
     if (connected == false || connection.isClosed){
+      //create a copy of pg_connection_example.dart called pg_connection.dart
       final con = ConnectionInfo();
       connection = PostgreSQLConnection(con.host, con.port, con.databaseName, username: con.username, password: con.password, useSSL: con.useSSL);
       await connection.open();
