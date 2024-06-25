@@ -1,4 +1,4 @@
-import 'package:chinese_data_tool/pg_connection_example.dart';
+import 'package:chinese_data_tool/pg_connection.dart';
 import 'package:postgres/postgres.dart';
 
 
