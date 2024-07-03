@@ -2,15 +2,16 @@ import 'package:chinese_data_tool/sql_helper.dart';
 import 'package:chinese_data_tool/unit_view.dart';
 import 'package:flutter/material.dart';
 
-
 class HomeHsk extends StatefulWidget {
-  const HomeHsk({Key? key, }) : super(key: key);
+  const HomeHsk({
+    Key? key,
+  }) : super(key: key);
 
   @override
   State<HomeHsk> createState() => _HomeHskState();
 }
 
-class _HomeHskState extends State<HomeHsk>{
+class _HomeHskState extends State<HomeHsk> {
   late Future<List<Map<String, dynamic>>> unitNumList;
   String courseName = "hsk";
   @override
@@ -18,19 +19,24 @@ class _HomeHskState extends State<HomeHsk>{
     super.initState();
     unitNumList = getUnitNum();
   }
+
   Future<List<Map<String, dynamic>>> getUnitNum() async {
     //final data = await SQLHelper.getCourseUnits(courseName);
-    final data = await SQLHelper.getCourseUnitsWithCompletionBoolean(courseName);
+    final data =
+        await SQLHelper.getCourseUnitsWithCompletionBoolean(courseName);
     return data;
   }
+
   void update() {
     setState(() {
       unitNumList = getUnitNum();
     });
   }
+
   @override
   Widget build(BuildContext context) {
-    return HSKCourseView(unitList: unitNumList, update: update, courseName: courseName);
+    return HSKCourseView(
+        unitList: unitNumList, update: update, courseName: courseName);
   }
 }
 
@@ -38,39 +44,45 @@ class HSKCourseView extends StatefulWidget {
   final Future<List<Map<String, dynamic>>> unitList;
   final Function update;
   final String courseName;
-  const HSKCourseView({Key? key, required this.unitList, required this.update, required this.courseName,}) : super(key: key);
+  const HSKCourseView({
+    Key? key,
+    required this.unitList,
+    required this.update,
+    required this.courseName,
+  }) : super(key: key);
 
   @override
   State<HSKCourseView> createState() => _HSKCourseViewState();
 }
 
 class _HSKCourseViewState extends State<HSKCourseView> {
-  List<Widget> createGridItems (List<Map<String, dynamic>> hskList){
+  List<Widget> createGridItems(List<Map<String, dynamic>> hskList) {
     List<Widget> widgets = [];
     List<int> hskListOffset = [];
     List<int> hskListUnitLengths = [];
-    for (int i = 0; i< hskList.length; i++){
-      if (i == 0){hskListOffset.add(0);}
-      else if(hskList[i]["hsk"] != hskList[i-1]["hsk"]){
-        hskListUnitLengths.add(i-hskListOffset.last);
+    for (int i = 0; i < hskList.length; i++) {
+      if (i == 0) {
+        hskListOffset.add(0);
+      } else if (hskList[i]["hsk"] != hskList[i - 1]["hsk"]) {
+        hskListUnitLengths.add(i - hskListOffset.last);
         hskListOffset.add(i);
       }
-      if(i == hskList.length -1){
+      if (i == hskList.length - 1) {
         //+1 because we are using the i from last of the current unit rather than the first of the next unit
-        hskListUnitLengths.add(i-hskListOffset.last +1);
+        hskListUnitLengths.add(i - hskListOffset.last + 1);
       }
     }
-    for(int i = 0; i<hskListOffset.length; i++){
-      widgets.add(
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(vertical: 7),
-            sliver: SliverToBoxAdapter(
-              child: Center(
-                  child: Text("hsk ${i+2} (${hskListUnitLengths[i]})", style: const TextStyle(fontSize: 20),)
-              ),
-            ),
-          )
-      );
+    for (int i = 0; i < hskListOffset.length; i++) {
+      widgets.add(SliverPadding(
+        padding: const EdgeInsets.symmetric(vertical: 7),
+        sliver: SliverToBoxAdapter(
+          child: Center(
+              child: Text(
+            "hsk ${i + 2} (${hskListUnitLengths[i]})",
+            style: const TextStyle(fontSize: 20),
+          )),
+        ),
+      ));
       widgets.add(
         SliverGrid(
           gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
@@ -80,8 +92,13 @@ class _HSKCourseViewState extends State<HSKCourseView> {
             childAspectRatio: 1,
           ),
           delegate: SliverChildBuilderDelegate(
-                (BuildContext context, int index) {
-              return GridItem(index:index+hskListOffset[i], hskList:hskList, update:widget.update, courseName: widget.courseName,);
+            (BuildContext context, int index) {
+              return GridItem(
+                index: index + hskListOffset[i],
+                hskList: hskList,
+                update: widget.update,
+                courseName: widget.courseName,
+              );
             },
             childCount: hskListUnitLengths[i],
           ),
@@ -90,30 +107,41 @@ class _HSKCourseViewState extends State<HSKCourseView> {
     }
     return widgets;
   }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Map<String, dynamic>>>(
-      future: widget.unitList,
-      builder: (BuildContext context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot){
-        if(snapshot.hasData){
-          final List<Map<String, dynamic>> unitList = snapshot.data!;
-          final List<Widget> gridItems = createGridItems(unitList);
-          return CourseView(
-            unitList: unitList, gridItems: gridItems, update: widget.update, courseName: widget.courseName,
-          );
-        }else{
-          return const CircularProgressIndicator();
-        }
-      }
-    );
+        future: widget.unitList,
+        builder: (BuildContext context,
+            AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+          if (snapshot.hasData) {
+            final List<Map<String, dynamic>> unitList = snapshot.data!;
+            final List<Widget> gridItems = createGridItems(unitList);
+            return CourseView(
+              unitList: unitList,
+              gridItems: gridItems,
+              update: widget.update,
+              courseName: widget.courseName,
+            );
+          } else {
+            return const CircularProgressIndicator();
+          }
+        });
   }
 }
+
 class CourseView extends StatelessWidget {
   final List<Map<String, dynamic>> unitList;
   final List<Widget> gridItems;
   final Function update;
   final String courseName;
-  const CourseView({super.key, required this.unitList, required this.update, required this.courseName, required this.gridItems,});
+  const CourseView({
+    super.key,
+    required this.unitList,
+    required this.update,
+    required this.courseName,
+    required this.gridItems,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -126,9 +154,9 @@ class CourseView extends StatelessWidget {
         Expanded(
           child: Padding(
             padding: const EdgeInsets.only(left: 20.0, right: 20),
-            child:  CustomScrollView(
+            child: CustomScrollView(
               scrollDirection: Axis.vertical,
-              physics:  const ScrollPhysics(),
+              physics: const ScrollPhysics(),
               slivers: [
                 SliverPadding(
                   padding: const EdgeInsets.only(top: 10, bottom: 20),
@@ -141,7 +169,7 @@ class CourseView extends StatelessWidget {
                       padding: const EdgeInsets.fromLTRB(10, 20, 10, 20),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children:  <Widget>[
+                        children: <Widget>[
                           const FittedBox(
                             child: FlutterLogo(),
                           ),
@@ -157,8 +185,9 @@ class CourseView extends StatelessWidget {
                 ...gridItems,
                 SliverToBoxAdapter(
                   child: IconButton(
-                      onPressed: (){
-                        final GlobalKey<FormState> newUnitKey = GlobalKey<FormState>();
+                      onPressed: () {
+                        final GlobalKey<FormState> newUnitKey =
+                            GlobalKey<FormState>();
                         late String newName;
                         showDialog<String>(
                           context: context,
@@ -171,25 +200,37 @@ class CourseView extends StatelessWidget {
                                 children: <Widget>[
                                   const Padding(
                                     padding: EdgeInsets.only(top: 8),
-                                    child: Text("unit name", style: TextStyle(fontSize: 16),),
+                                    child: Text(
+                                      "unit name",
+                                      style: TextStyle(fontSize: 16),
+                                    ),
                                   ),
                                   TextFormField(
-                                    onSaved: (String? value){newName = value!;},
+                                    onSaved: (String? value) {
+                                      newName = value!;
+                                    },
                                     decoration: const InputDecoration(
                                       hintText: 'Enter a name',
                                     ),
                                     validator: (String? value) {
-                                      if (value == null || value.isEmpty) {return 'Please enter some text';}
+                                      if (value == null || value.isEmpty) {
+                                        return 'Please enter some text';
+                                      }
                                       return null;
                                     },
                                   ),
                                   Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 16.0),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 16.0),
                                     child: ElevatedButton(
                                       onPressed: () {
-                                        if (newUnitKey.currentState!.validate()) {
+                                        if (newUnitKey.currentState!
+                                            .validate()) {
                                           newUnitKey.currentState!.save();
-                                          SQLHelper.createNewUnit(course: courseName, name: newName, hsk: unitList.last['hsk']);
+                                          SQLHelper.createNewUnit(
+                                              course: courseName,
+                                              name: newName,
+                                              hsk: unitList.last['hsk']);
                                           update();
                                           Navigator.pop(context);
                                         }
@@ -203,8 +244,7 @@ class CourseView extends StatelessWidget {
                           ),
                         );
                       },
-                      icon: const Icon(Icons.add)
-                  ),
+                      icon: const Icon(Icons.add)),
                 ),
               ],
             ),
@@ -220,15 +260,22 @@ class GridItem extends StatelessWidget {
   final List<Map<String, dynamic>> hskList;
   final Function update;
   final String courseName;
-  const GridItem({super.key, required this.index, required this.hskList, required this.update, required this.courseName});
+  const GridItem(
+      {super.key,
+      required this.index,
+      required this.hskList,
+      required this.update,
+      required this.courseName});
 
   @override
   Widget build(BuildContext context) {
-    final Color unitColor = hskList[index].containsKey("completed")? hskList[index]["completed"]
-        ? Colors.green
-        : Colors.blueGrey : Colors.blueGrey;
+    final Color unitColor = hskList[index].containsKey("completed")
+        ? hskList[index]["completed"]
+            ? Colors.green
+            : Colors.blueGrey
+        : Colors.blueGrey;
     return GestureDetector(
-      onLongPress: (){
+      onLongPress: () {
         showDialog<String>(
           context: context,
           builder: (BuildContext context) => Dialog(
@@ -236,13 +283,19 @@ class GridItem extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  ChangeUnitNameForm(hskList: hskList, index: index, update: update),
-                  SetHskLevelForm(hskList: hskList, index: index, update: update),
-                  SetUnitOrderForm(hskList: hskList, index: index, update: update),
+                  ChangeUnitNameForm(
+                      hskList: hskList, index: index, update: update),
+                  SetHskLevelForm(
+                      hskList: hskList, index: index, update: update),
+                  SetUnitOrderForm(
+                      hskList: hskList, index: index, update: update),
                   SwapUnitForm(hskList: hskList, index: index, update: update),
-                  InsertUnitAtIndexForm(pressedIndex:  hskList[index]["unit_id"], update: update),
-                  MergeUnitsForm(pressedIndex:  hskList[index]["unit_id"], update: update),
-                  SetVisibilityForm(hskList: hskList, index: index, update: update),
+                  InsertUnitAtIndexForm(
+                      pressedIndex: hskList[index]["unit_id"], update: update),
+                  MergeUnitsForm(
+                      pressedIndex: hskList[index]["unit_id"], update: update),
+                  SetVisibilityForm(
+                      hskList: hskList, index: index, update: update),
                 ],
               ),
             ),
@@ -252,8 +305,7 @@ class GridItem extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: unitColor, width: 3)
-        ),
+            border: Border.all(color: unitColor, width: 3)),
         child: Column(
           children: [
             Padding(
@@ -272,13 +324,16 @@ class GridItem extends StatelessWidget {
             Text(hskList[index]["quantity"].toString()),
             TextButton(
               style: ButtonStyle(
-                  overlayColor: MaterialStateProperty.all(Colors.transparent)
-              ),
+                  overlayColor: MaterialStateProperty.all(Colors.transparent)),
               onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => UnitView(unit: hskList[index]["unit_id"], name:hskList[index]["unit_name"], courseName: courseName, updateHomeHsk: update ),
+                    builder: (context) => UnitView(
+                        unit: hskList[index]["unit_id"],
+                        name: hskList[index]["unit_name"],
+                        courseName: courseName,
+                        updateHomeHsk: update),
                   ),
                 );
               },
@@ -295,11 +350,14 @@ class GridItem extends StatelessWidget {
   }
 }
 
-
 //forms
 
 class ChangeUnitNameForm extends StatefulWidget {
-  const ChangeUnitNameForm({super.key, required this.hskList, required this.index, required this.update});
+  const ChangeUnitNameForm(
+      {super.key,
+      required this.hskList,
+      required this.index,
+      required this.update});
   final List<Map<String, dynamic>> hskList;
   final int index;
   final Function update;
@@ -322,16 +380,23 @@ class _ChangeUnitNameFormState extends State<ChangeUnitNameForm> {
         children: <Widget>[
           const Padding(
             padding: EdgeInsets.only(top: 8),
-            child: Text("Change unit name", style: TextStyle(fontSize: 16),),
+            child: Text(
+              "Change unit name",
+              style: TextStyle(fontSize: 16),
+            ),
           ),
           TextFormField(
-            onSaved: (String? value){newName = value!;},
+            onSaved: (String? value) {
+              newName = value!;
+            },
             initialValue: pressedName,
             decoration: const InputDecoration(
               hintText: 'Enter a new name',
             ),
             validator: (String? value) {
-              if (value == null || value.isEmpty) {return 'Please enter some text';}
+              if (value == null || value.isEmpty) {
+                return 'Please enter some text';
+              }
               return null;
             },
           ),
@@ -341,7 +406,7 @@ class _ChangeUnitNameFormState extends State<ChangeUnitNameForm> {
               onPressed: () {
                 if (unitNameKey.currentState!.validate()) {
                   unitNameKey.currentState!.save();
-                  int id  = widget.hskList[widget.index]["unit_id"];
+                  int id = widget.hskList[widget.index]["unit_id"];
                   SQLHelper.updateUnitName(id: id, newName: newName);
                   widget.update();
                   Navigator.pop(context);
@@ -357,7 +422,11 @@ class _ChangeUnitNameFormState extends State<ChangeUnitNameForm> {
 }
 
 class SetHskLevelForm extends StatefulWidget {
-  const SetHskLevelForm({super.key, required this.hskList, required this.index, required this.update});
+  const SetHskLevelForm(
+      {super.key,
+      required this.hskList,
+      required this.index,
+      required this.update});
   final List<Map<String, dynamic>> hskList;
   final int index;
   final Function update;
@@ -371,8 +440,8 @@ class _SetHskLevelFormState extends State<SetHskLevelForm> {
   @override
   Widget build(BuildContext context) {
     final String currentHskLevel = widget.hskList[widget.index]["hsk"] != null
-      ? widget.hskList[widget.index]["hsk"].toString()
-      : "";
+        ? widget.hskList[widget.index]["hsk"].toString()
+        : "";
     late int hskLevel;
     final int pressedIndex = widget.hskList[widget.index]["unit_id"];
     return Form(
@@ -383,17 +452,24 @@ class _SetHskLevelFormState extends State<SetHskLevelForm> {
         children: <Widget>[
           const Padding(
             padding: EdgeInsets.only(top: 8),
-            child: Text("set hsk Level", style: TextStyle(fontSize: 16),),
+            child: Text(
+              "set hsk Level",
+              style: TextStyle(fontSize: 16),
+            ),
           ),
           TextFormField(
             keyboardType: TextInputType.number,
             initialValue: currentHskLevel,
-            onSaved: (String? value){hskLevel = int.parse(value!);},
+            onSaved: (String? value) {
+              hskLevel = int.parse(value!);
+            },
             decoration: const InputDecoration(
               hintText: 'Enter a number',
             ),
             validator: (String? value) {
-              if (value == null || value.isEmpty) {return 'Please enter some text';}
+              if (value == null || value.isEmpty) {
+                return 'Please enter some text';
+              }
               return null;
             },
           ),
@@ -418,7 +494,11 @@ class _SetHskLevelFormState extends State<SetHskLevelForm> {
 }
 
 class SetUnitOrderForm extends StatefulWidget {
-  const SetUnitOrderForm({super.key, required this.hskList, required this.index, required this.update});
+  const SetUnitOrderForm(
+      {super.key,
+      required this.hskList,
+      required this.index,
+      required this.update});
   final List<Map<String, dynamic>> hskList;
   final int index;
   final Function update;
@@ -431,9 +511,10 @@ class _SetUnitOrderFormState extends State<SetUnitOrderForm> {
   final GlobalKey<FormState> unitHskLevel = GlobalKey<FormState>();
   @override
   Widget build(BuildContext context) {
-    final String currentUnitOrder = widget.hskList[widget.index]["unit_order"] != null
-        ? widget.hskList[widget.index]["unit_order"].toString()
-        : "";
+    final String currentUnitOrder =
+        widget.hskList[widget.index]["unit_order"] != null
+            ? widget.hskList[widget.index]["unit_order"].toString()
+            : "";
     late int newUnitOrder;
     final int pressedIndex = widget.hskList[widget.index]["unit_id"];
     return Form(
@@ -444,17 +525,24 @@ class _SetUnitOrderFormState extends State<SetUnitOrderForm> {
         children: <Widget>[
           const Padding(
             padding: EdgeInsets.only(top: 8),
-            child: Text("set unit order", style: TextStyle(fontSize: 16),),
+            child: Text(
+              "set unit order",
+              style: TextStyle(fontSize: 16),
+            ),
           ),
           TextFormField(
             keyboardType: TextInputType.number,
             initialValue: currentUnitOrder,
-            onSaved: (String? value){newUnitOrder = int.parse(value!);},
+            onSaved: (String? value) {
+              newUnitOrder = int.parse(value!);
+            },
             decoration: const InputDecoration(
               hintText: 'Enter a number',
             ),
             validator: (String? value) {
-              if (value == null || value.isEmpty) {return 'Please enter some text';}
+              if (value == null || value.isEmpty) {
+                return 'Please enter some text';
+              }
               return null;
             },
           ),
@@ -464,7 +552,8 @@ class _SetUnitOrderFormState extends State<SetUnitOrderForm> {
               onPressed: () {
                 if (unitHskLevel.currentState!.validate()) {
                   unitHskLevel.currentState!.save();
-                  SQLHelper.setUnitOrder(unit: pressedIndex, order: newUnitOrder);
+                  SQLHelper.setUnitOrder(
+                      unit: pressedIndex, order: newUnitOrder);
                   widget.update();
                   Navigator.pop(context);
                 }
@@ -479,7 +568,11 @@ class _SetUnitOrderFormState extends State<SetUnitOrderForm> {
 }
 
 class SwapUnitForm extends StatefulWidget {
-  const SwapUnitForm({super.key, required this.hskList, required this.index, required this.update});
+  const SwapUnitForm(
+      {super.key,
+      required this.hskList,
+      required this.index,
+      required this.update});
   final List<Map<String, dynamic>> hskList;
   final int index;
   final Function update;
@@ -503,16 +596,23 @@ class _SwapUnitFormState extends State<SwapUnitForm> {
         children: <Widget>[
           const Padding(
             padding: EdgeInsets.only(top: 8),
-            child: Text("Swap unit with", style: TextStyle(fontSize: 16),),
+            child: Text(
+              "Swap unit with",
+              style: TextStyle(fontSize: 16),
+            ),
           ),
           TextFormField(
             keyboardType: TextInputType.number,
-            onSaved: (String? value){swapIndex = int.parse(value!);},
+            onSaved: (String? value) {
+              swapIndex = int.parse(value!);
+            },
             decoration: const InputDecoration(
               hintText: 'Enter a number',
             ),
             validator: (String? value) {
-              if (value == null || value.isEmpty) {return 'Please enter some text';}
+              if (value == null || value.isEmpty) {
+                return 'Please enter some text';
+              }
               return null;
             },
           ),
@@ -522,11 +622,14 @@ class _SwapUnitFormState extends State<SwapUnitForm> {
               onPressed: () {
                 if (unitFormKey.currentState!.validate()) {
                   unitFormKey.currentState!.save();
-                  if (widget.hskList[swapIndex -1]["unit_id"] == swapIndex){
-                    String swapName = widget.hskList[swapIndex -1]["unit_name"];
+                  if (widget.hskList[swapIndex - 1]["unit_id"] == swapIndex) {
+                    String swapName =
+                        widget.hskList[swapIndex - 1]["unit_name"];
                     SQLHelper.swapUnits(
-                      pressedUnit: pressedIndex, swapUnit: swapIndex,
-                      pressedName: pressedName, swapName: swapName,
+                      pressedUnit: pressedIndex,
+                      swapUnit: swapIndex,
+                      pressedName: pressedName,
+                      swapName: swapName,
                     );
                     widget.update();
                   }
@@ -543,7 +646,8 @@ class _SwapUnitFormState extends State<SwapUnitForm> {
 }
 
 class InsertUnitAtIndexForm extends StatefulWidget {
-  const InsertUnitAtIndexForm({super.key, required this.update, required this.pressedIndex});
+  const InsertUnitAtIndexForm(
+      {super.key, required this.update, required this.pressedIndex});
   final int pressedIndex;
   final Function update;
 
@@ -564,16 +668,23 @@ class _InsertUnitAtIndexFormState extends State<InsertUnitAtIndexForm> {
         children: <Widget>[
           const Padding(
             padding: EdgeInsets.only(top: 8),
-            child: Text("Insert unit at", style: TextStyle(fontSize: 16),),
+            child: Text(
+              "Insert unit at",
+              style: TextStyle(fontSize: 16),
+            ),
           ),
           TextFormField(
             keyboardType: TextInputType.number,
-            onSaved: (String? value){insertAt = int.parse(value!);},
+            onSaved: (String? value) {
+              insertAt = int.parse(value!);
+            },
             decoration: const InputDecoration(
               hintText: 'Enter a number',
             ),
             validator: (String? value) {
-              if (value == null || value.isEmpty) {return 'Please enter some text';}
+              if (value == null || value.isEmpty) {
+                return 'Please enter some text';
+              }
               return null;
             },
           ),
@@ -583,7 +694,10 @@ class _InsertUnitAtIndexFormState extends State<InsertUnitAtIndexForm> {
               onPressed: () {
                 if (unitInsertKey.currentState!.validate()) {
                   unitInsertKey.currentState!.save();
-                  SQLHelper.insertUnitAt(pressedUnit: widget.pressedIndex, unitInsertNum: insertAt,);
+                  SQLHelper.insertUnitAt(
+                    pressedUnit: widget.pressedIndex,
+                    unitInsertNum: insertAt,
+                  );
                   widget.update();
                   Navigator.pop(context);
                 }
@@ -598,7 +712,8 @@ class _InsertUnitAtIndexFormState extends State<InsertUnitAtIndexForm> {
 }
 
 class MergeUnitsForm extends StatefulWidget {
-  const MergeUnitsForm({super.key, required this.pressedIndex, required this.update});
+  const MergeUnitsForm(
+      {super.key, required this.pressedIndex, required this.update});
   final int pressedIndex;
   final Function update;
 
@@ -620,16 +735,23 @@ class _MergeUnitsFormState extends State<MergeUnitsForm> {
         children: <Widget>[
           const Padding(
             padding: EdgeInsets.only(top: 8),
-            child: Text("Merge unit with", style: TextStyle(fontSize: 16),),
+            child: Text(
+              "Merge unit with",
+              style: TextStyle(fontSize: 16),
+            ),
           ),
           TextFormField(
             keyboardType: TextInputType.number,
-            onSaved: (String? value){mergeWith = int.parse(value!);},
+            onSaved: (String? value) {
+              mergeWith = int.parse(value!);
+            },
             decoration: const InputDecoration(
               hintText: 'Enter a number',
             ),
             validator: (String? value) {
-              if (value == null || value.isEmpty) {return 'Please enter some text';}
+              if (value == null || value.isEmpty) {
+                return 'Please enter some text';
+              }
               return null;
             },
           ),
@@ -639,7 +761,10 @@ class _MergeUnitsFormState extends State<MergeUnitsForm> {
               onPressed: () {
                 if (mergeUnitsKey.currentState!.validate()) {
                   mergeUnitsKey.currentState!.save();
-                  SQLHelper.mergeUnits(pressedUnit: widget.pressedIndex, mergeUnit: mergeWith,);
+                  SQLHelper.mergeUnits(
+                    pressedUnit: widget.pressedIndex,
+                    mergeUnit: mergeWith,
+                  );
                   widget.update();
                   Navigator.pop(context);
                 }
@@ -654,7 +779,11 @@ class _MergeUnitsFormState extends State<MergeUnitsForm> {
 }
 
 class SetVisibilityForm extends StatefulWidget {
-  const SetVisibilityForm({super.key, required this.hskList, required this.index, required this.update});
+  const SetVisibilityForm(
+      {super.key,
+      required this.hskList,
+      required this.index,
+      required this.update});
   final List<Map<String, dynamic>> hskList;
   final int index;
   final Function update;
@@ -678,16 +807,23 @@ class _SetVisibilityFormState extends State<SetVisibilityForm> {
         children: <Widget>[
           const Padding(
             padding: EdgeInsets.only(top: 8),
-            child: Text("Change unit visibility", style: TextStyle(fontSize: 16),),
+            child: Text(
+              "Change unit visibility",
+              style: TextStyle(fontSize: 16),
+            ),
           ),
           TextFormField(
-            onSaved: (String? value){visible = int.parse(value!);},
+            onSaved: (String? value) {
+              visible = int.parse(value!);
+            },
             initialValue: pressedVisibility.toString(),
             decoration: const InputDecoration(
               hintText: 'Enter a new name',
             ),
             validator: (String? value) {
-              if (value == null || value.isEmpty) {return 'Please enter some text';}
+              if (value == null || value.isEmpty) {
+                return 'Please enter some text';
+              }
               return null;
             },
           ),
@@ -697,7 +833,7 @@ class _SetVisibilityFormState extends State<SetVisibilityForm> {
               onPressed: () {
                 if (visibilityKey.currentState!.validate()) {
                   visibilityKey.currentState!.save();
-                  int id  = widget.hskList[widget.index]["unit_id"];
+                  int id = widget.hskList[widget.index]["unit_id"];
                   SQLHelper.updateVisibility(id: id, newVisibility: visible);
                   widget.update();
                   Navigator.pop(context);
@@ -711,7 +847,3 @@ class _SetVisibilityFormState extends State<SetVisibilityForm> {
     );
   }
 }
-
-
-
-

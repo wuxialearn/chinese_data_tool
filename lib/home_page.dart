@@ -13,13 +13,13 @@ class MyHomePage extends StatefulWidget {
   MyHomePageState createState() => MyHomePageState();
 }
 
-class MyHomePageState extends State<MyHomePage>{
-
+class MyHomePageState extends State<MyHomePage> {
   onTappedTab(int index) {
     setState(() {
       tabsIndex = index;
     });
   }
+
   int tabsIndex = 2;
   late List<Widget> tabList = <Widget>[];
   @override
@@ -29,7 +29,9 @@ class MyHomePageState extends State<MyHomePage>{
     tabList = <Widget>[
       const SafeArea(child: HomeHsk()),
       const SafeArea(child: SortUnits()),
-      const SearchWord(courseName: 'wuxia',),
+      const SearchWord(
+        courseName: 'wuxia',
+      ),
       const SafeArea(child: CustomCourse()),
       //const LiteralDefinitionSorter(),
     ];
@@ -49,7 +51,8 @@ class MyHomePageState extends State<MyHomePage>{
         type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.query_stats_sharp), label: "Stats"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.query_stats_sharp), label: "Stats"),
           BottomNavigationBarItem(icon: Icon(Icons.search), label: "search"),
           BottomNavigationBarItem(icon: Icon(Icons.create), label: "custom"),
           //BottomNavigationBarItem(icon: Icon(Icons.sort), label: "literals"),

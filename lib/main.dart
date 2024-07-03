@@ -15,7 +15,7 @@ void main() {
   runApp(const MyApp());
 }
 
-void test () async {
+void test() async {
   var data = await SQLHelper.getUnitWithMissingSentences(40);
   print(data);
 }
@@ -39,5 +39,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-

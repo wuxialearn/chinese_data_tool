@@ -10,17 +10,18 @@ class SortUnits extends StatefulWidget {
 }
 
 class _SortUnitsState extends State<SortUnits> {
-  Future<List<Map<String, dynamic>>> hskFuture = SQLHelper.getNewWords(courseName: 'hsk');
+  Future<List<Map<String, dynamic>>> hskFuture =
+      SQLHelper.getNewWords(courseName: 'hsk');
   @override
   Widget build(BuildContext context) {
-    void update (){
-        setState(() {
-          hskFuture = SQLHelper.getNewWords(sortBy: "Random()", courseName: 'hsk');
-        });
+    void update() {
+      setState(() {
+        hskFuture =
+            SQLHelper.getNewWords(sortBy: "Random()", courseName: 'hsk');
+      });
     }
-    return Scaffold(
-      body: _MissingWords(update: update, hskFuture: hskFuture)
-    );
+
+    return Scaffold(body: _MissingWords(update: update, hskFuture: hskFuture));
   }
 }
 
@@ -33,7 +34,8 @@ class _MissingWords extends StatelessWidget {
   Widget build(BuildContext context) {
     return FutureBuilder<List<Map<String, dynamic>>>(
         future: hskFuture,
-        builder: (BuildContext context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+        builder: (BuildContext context,
+            AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
           if (snapshot.hasData) {
             List<Map<String, dynamic>>? hskList = snapshot.data;
             return Padding(
@@ -48,10 +50,11 @@ class _MissingWords extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Text(
-                            "${hskList!.length} unsorted words in hsk 1-4"),
+                        Text("${hskList!.length} unsorted words in hsk 1-4"),
                         TextButton(
-                            onPressed: (){update();},
+                            onPressed: () {
+                              update();
+                            },
                             child: const Text("Randomize"))
                       ],
                     ),
@@ -63,7 +66,14 @@ class _MissingWords extends StatelessWidget {
                         scrollDirection: Axis.vertical,
                         itemCount: hskList.length,
                         itemBuilder: (context, index) {
-                          return HskListviewItem(hskList: hskList[index], showTranslation: true, separator: true, onClick: (i){}, showNumber: true, index: index, useGivenIndex: true);
+                          return HskListviewItem(
+                              hskList: hskList[index],
+                              showTranslation: true,
+                              separator: true,
+                              onClick: (i) {},
+                              showNumber: true,
+                              index: index,
+                              useGivenIndex: true);
                         },
                       ),
                     ),
@@ -71,9 +81,9 @@ class _MissingWords extends StatelessWidget {
                 ),
               ),
             );
+          } else {
+            return const Center(child: CircularProgressIndicator());
           }
-          else{return const Center(child: CircularProgressIndicator());}
-        }
-    );
+        });
   }
 }

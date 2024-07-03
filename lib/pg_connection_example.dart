@@ -1,5 +1,5 @@
 //create a copy of this file called pg_connection.dart
-final class ConnectionInfo{
+final class ConnectionInfo {
   final String host = "";
   final int port = 0;
   final String databaseName = "0";

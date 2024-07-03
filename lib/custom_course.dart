@@ -19,10 +19,13 @@ class _CustomCourseState extends State<CustomCourse> {
     super.initState();
     unitList = getUnitNum();
   }
+
   Future<List<Map<String, dynamic>>> getUnitNum() async {
-    final data = await SQLHelper.getCourseUnitsWithCompletionBoolean(courseName);
+    final data =
+        await SQLHelper.getCourseUnitsWithCompletionBoolean(courseName);
     return data;
   }
+
   void update() {
     setState(() {
       unitList = getUnitNum();
@@ -35,7 +38,7 @@ class _CustomCourseState extends State<CustomCourse> {
         child: Row(
           children: [
             TextButton(
-                onPressed: (){
+                onPressed: () {
                   addWordDialog();
                 },
                 child: const Text("Add words to course"))
@@ -51,7 +54,12 @@ class _CustomCourseState extends State<CustomCourse> {
         ),
         delegate: SliverChildBuilderDelegate(
           (BuildContext context, int index) {
-            return GridItem(index: index, hskList: hskList, update: update, courseName: courseName,);
+            return GridItem(
+              index: index,
+              hskList: hskList,
+              update: update,
+              courseName: courseName,
+            );
           },
           childCount: hskList.length,
         ),
@@ -59,7 +67,7 @@ class _CustomCourseState extends State<CustomCourse> {
     ];
   }
 
-  void addWordDialog(){
+  void addWordDialog() {
     final GlobalKey<FormState> newCourseWord = GlobalKey<FormState>();
     late String hanzi;
     late String translation;
@@ -80,43 +88,59 @@ class _CustomCourseState extends State<CustomCourse> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     TextFormField(
-                      onSaved: (String? value){hanzi = value!;},
+                      onSaved: (String? value) {
+                        hanzi = value!;
+                      },
                       decoration: const InputDecoration(
                         hintText: 'Enter Hanzi',
                       ),
                       validator: (String? value) {
-                        if (value == null || value.isEmpty) {return 'Please enter some text';}
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter some text';
+                        }
                         return null;
                       },
                     ),
                     TextFormField(
-                      onSaved: (String? value){translation = value!;},
+                      onSaved: (String? value) {
+                        translation = value!;
+                      },
                       decoration: const InputDecoration(
                         hintText: 'Enter Translation',
                       ),
                       validator: (String? value) {
-                        if (value == null || value.isEmpty) {return 'Please enter some text';}
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter some text';
+                        }
                         return null;
                       },
                     ),
                     TextFormField(
-                      onSaved: (String? value){pinyin = value!;},
+                      onSaved: (String? value) {
+                        pinyin = value!;
+                      },
                       decoration: const InputDecoration(
                         hintText: 'Enter Pinyin',
                       ),
                       validator: (String? value) {
-                        if (value == null || value.isEmpty) {return 'Please enter some text';}
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter some text';
+                        }
                         return null;
                       },
                     ),
                     TextFormField(
                       keyboardType: TextInputType.number,
-                      onSaved: (String? value){unit = int.parse(value!);},
+                      onSaved: (String? value) {
+                        unit = int.parse(value!);
+                      },
                       decoration: const InputDecoration(
                         hintText: 'Enter Unit',
                       ),
                       validator: (String? value) {
-                        if (value == null || value.isEmpty) {return 'Please enter some text';}
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter some text';
+                        }
                         return null;
                       },
                     ),
@@ -127,7 +151,12 @@ class _CustomCourseState extends State<CustomCourse> {
                           if (newCourseWord.currentState!.validate()) {
                             if (newCourseWord.currentState!.validate()) {
                               newCourseWord.currentState!.save();
-                              SQLHelper.addWordToCustomCourse(course: courseName, hanzi: hanzi, pinyin: pinyin, translations0: translation, unit: unit);
+                              SQLHelper.addWordToCustomCourse(
+                                  course: courseName,
+                                  hanzi: hanzi,
+                                  pinyin: pinyin,
+                                  translations0: translation,
+                                  unit: unit);
                               update();
                               Navigator.pop(context);
                             }
@@ -155,22 +184,22 @@ class _CustomCourseState extends State<CustomCourse> {
 
   @override
   Widget build(BuildContext context) {
-
     return FutureBuilder<List<Map<String, dynamic>>>(
         future: unitList,
-        builder: (BuildContext context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot){
-          if(snapshot.hasData){
+        builder: (BuildContext context,
+            AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+          if (snapshot.hasData) {
             List<Map<String, dynamic>> unitList = snapshot.data!;
             final List<Widget> gridItems = createGridItems(unitList);
             return CourseView(
-              unitList: unitList, gridItems: gridItems, update: update, courseName: courseName,
+              unitList: unitList,
+              gridItems: gridItems,
+              update: update,
+              courseName: courseName,
             );
-          }else{
+          } else {
             return const CircularProgressIndicator();
           }
-        }
-    );
+        });
   }
 }
-
-

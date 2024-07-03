@@ -2,48 +2,69 @@
 import 'package:chinese_data_tool/pg_connection.dart';
 import 'package:postgres/postgres.dart';
 
-
 class SQLHelper {
   static late PostgreSQLConnection connection;
   static bool connected = false;
 
-  static Future<PostgreSQLConnection> psql() async{
-    if (connected == false || connection.isClosed){
+  static Future<PostgreSQLConnection> psql() async {
+    if (connected == false || connection.isClosed) {
       //create a copy of pg_connection_example.dart called pg_connection.dart
       final con = ConnectionInfo();
-      connection = PostgreSQLConnection(con.host, con.port, con.databaseName, username: con.username, password: con.password, useSSL: con.useSSL);
+      connection = PostgreSQLConnection(con.host, con.port, con.databaseName,
+          username: con.username, password: con.password, useSSL: con.useSSL);
       await connection.open();
       connected = true;
     }
     return connection;
   }
 
-  static void insertSentence({required int unit, required String characters, required String pinyin, required String meaning, required int subunit, required String course} ) async{
+  static void insertSentence(
+      {required int unit,
+      required String characters,
+      required String pinyin,
+      required String meaning,
+      required int subunit,
+      required String course}) async {
     final db = await SQLHelper.psql();
     String sql = """
     INSERT into sentences(unit, characters, pinyin, meaning, subunit, course)
     VALUES (@a, @b, @c, @d, @e, '$course')
     """;
-    final Map<String, dynamic> substitutionValues = {"a": unit, "b" : characters, "c": pinyin, "d" : meaning, "e": subunit};
-    int completed = await db.execute(sql, substitutionValues: substitutionValues);
+    final Map<String, dynamic> substitutionValues = {
+      "a": unit,
+      "b": characters,
+      "c": pinyin,
+      "d": meaning,
+      "e": subunit
+    };
+    int completed =
+        await db.execute(sql, substitutionValues: substitutionValues);
     print("insert Sentence result: $completed");
-    while(completed != 1){
+    while (completed != 1) {
       await db.execute(sql, substitutionValues: substitutionValues);
     }
   }
 
-  static Future<void> updateSentenceSubunit({required int id, required int subunit}) async {
+  static Future<void> updateSentenceSubunit(
+      {required int id, required int subunit}) async {
     final db = await SQLHelper.psql();
     final String sql = "UPDATE sentences SET subunit = $subunit WHERE id = $id";
     db.execute(sql);
   }
 
-  static void updateWordTranslation({required int id, required String value}) async {
+  static void updateWordTranslation(
+      {required int id, required String value}) async {
     final db = await SQLHelper.psql();
-    final String sql = "UPDATE courses SET translations0 = '$value', custom_translation = true WHERE id = $id";
+    final String sql =
+        "UPDATE courses SET translations0 = '$value', custom_translation = true WHERE id = $id";
     db.execute(sql);
   }
-  static void updateWord({required int id, required String translation, required String hanzi, required String pinyin}) async {
+
+  static void updateWord(
+      {required int id,
+      required String translation,
+      required String hanzi,
+      required String pinyin}) async {
     final db = await SQLHelper.psql();
     final String sql = """
     UPDATE courses SET 
@@ -55,40 +76,56 @@ class SQLHelper {
     """;
     db.execute(sql);
   }
-  static void updateSentence({required String hanzi, required meaning, required pinyin, required int id}) async {
+
+  static void updateSentence(
+      {required String hanzi,
+      required meaning,
+      required pinyin,
+      required int id}) async {
     final db = await SQLHelper.psql();
-    final String sql = "UPDATE sentences SET characters = @a,  pinyin = @b, meaning = @c WHERE id = $id";
-    final Map<String, dynamic> substitutionValues = {"a": hanzi, "b" : pinyin, "c": meaning};
+    final String sql =
+        "UPDATE sentences SET characters = @a,  pinyin = @b, meaning = @c WHERE id = $id";
+    final Map<String, dynamic> substitutionValues = {
+      "a": hanzi,
+      "b": pinyin,
+      "c": meaning
+    };
     db.execute(sql, substitutionValues: substitutionValues);
   }
 
-  static void removeSentence({required int id} ) async{
+  static void removeSentence({required int id}) async {
     final db = await SQLHelper.psql();
     final String sql = "DELETE FROM sentences WHERE id = $id";
     db.execute(sql);
   }
+
   static void removeWord({required id}) async {
     final db = await SQLHelper.psql();
-    final String sql = "UPDATE courses SET unit = NULL, subunit = NULL WHERE id = $id";
+    final String sql =
+        "UPDATE courses SET unit = NULL, subunit = NULL WHERE id = $id";
     db.execute(sql);
   }
 
-  static void updateSubunit({required int id, required int subunit}) async{
+  static void updateSubunit({required int id, required int subunit}) async {
     final db = await SQLHelper.psql();
     final String sql = "UPDATE courses SET subunit = $subunit WHERE id = $id";
     db.execute(sql);
   }
 
-  static void addWord({required int id, required int unit}) async{
+  static void addWord({required int id, required int unit}) async {
     final db = await SQLHelper.psql();
-    final String sql = "UPDATE courses SET unit = $unit, subunit = 1 WHERE id = $id";
+    final String sql =
+        "UPDATE courses SET unit = $unit, subunit = 1 WHERE id = $id";
     db.execute(sql);
   }
 
-  static Future<List<Map<String, dynamic>>> getNewWords({required String courseName, String sortBy = "hsk, pinyin ASC",}) async {
+  static Future<List<Map<String, dynamic>>> getNewWords({
+    required String courseName,
+    String sortBy = "hsk, pinyin ASC",
+  }) async {
     final db = await SQLHelper.psql();
     String hsk = "";
-    if (courseName == "hsk"){
+    if (courseName == "hsk") {
       hsk = "AND hsk < 5";
     }
     String sql = """
@@ -98,7 +135,8 @@ class SQLHelper {
       WHERE course = '$courseName' AND unit IS NULL $hsk
       ORDER BY $sortBy
     """;
-    List<Map<String, Map<String, dynamic>>> results = await db.mappedResultsQuery(sql);
+    List<Map<String, Map<String, dynamic>>> results =
+        await db.mappedResultsQuery(sql);
     List<Map<String, dynamic>> result = [];
     for (final row in results) {
       result.add({...row["courses"]!, ...row[""]!});
@@ -106,9 +144,11 @@ class SQLHelper {
     return result;
   }
 
-  static Future<List<Map<String, dynamic>>> getCourseUnits(String course) async {
+  static Future<List<Map<String, dynamic>>> getCourseUnits(
+      String course) async {
     final db = await SQLHelper.psql();
-    List<Map<String, Map<String, dynamic>>> results = await db.mappedResultsQuery("""
+    List<Map<String, Map<String, dynamic>>> results =
+        await db.mappedResultsQuery("""
       SELECT units.unit_id, units.unit_name, units.hsk, units.unit_order, units.visible, QTY.quantity FROM units
       LEFT JOIN
           (SELECT COUNT(courses.unit) AS quantity, courses.unit FROM courses GROUP BY courses.unit) AS QTY
@@ -124,7 +164,8 @@ class SQLHelper {
     return result;
   }
 
-  static Future<List<Map<String, dynamic>>> getCourseUnitsWithCompletionBoolean(String course) async {
+  static Future<List<Map<String, dynamic>>> getCourseUnitsWithCompletionBoolean(
+      String course) async {
     final db = await SQLHelper.psql();
     final String sql = """
     select unit_id, unit_name, hsk, unit_order, completed, visible, QTY.quantity from(
@@ -156,7 +197,8 @@ class SQLHelper {
     ON cte.unit_id = QTY.unit
     ORDER BY unit_order
     """;
-    List<Map<String, Map<String, dynamic>>> results = await db.mappedResultsQuery(sql);
+    List<Map<String, Map<String, dynamic>>> results =
+        await db.mappedResultsQuery(sql);
     List<Map<String, dynamic>> result = [];
     for (final row in results) {
       final Map<String, dynamic> combined = {...row["units"]!, ...row[""]!};
@@ -169,20 +211,46 @@ class SQLHelper {
     final db = await SQLHelper.psql();
     late String column;
     String word = newWord;
-    if(RegExp(
-        r"(ā|á|ǎ|à|ē|é|ě|è|ī|í|ǐ|ì|ō|ó|ǒ|ò|ū|ú|ǔ|ù|ǖ|ǘ|ǚ|ǜ)",
-        unicode: true
-    ).hasMatch(newWord)){
+    if (RegExp(r"(ā|á|ǎ|à|ē|é|ě|è|ī|í|ǐ|ì|ō|ó|ǒ|ò|ū|ú|ǔ|ù|ǖ|ǘ|ǚ|ǜ)",
+            unicode: true)
+        .hasMatch(newWord)) {
       column = "pinyin";
-      const Map<String, String> pinyinToNumber = {"ā": "a1", "á": "a2", "ǎ": "a3", "à": "a4", "ē": "e1", "é": "e2", "ě": "e3", "è": "e4", "ī": "i1", "í": "i2", "ǐ": "i3", "ì": "i4", "ō": "o1", "ó": "o2", "ǒ": "o3", "ò": "o4", "ū": "u1", "ú": "u2", "ǔ": "u3", "ù": "u4", "ǖ": "u5", "ǘ": "u6", "ǚ": "u7", "ǜ": "u8",};
+      const Map<String, String> pinyinToNumber = {
+        "ā": "a1",
+        "á": "a2",
+        "ǎ": "a3",
+        "à": "a4",
+        "ē": "e1",
+        "é": "e2",
+        "ě": "e3",
+        "è": "e4",
+        "ī": "i1",
+        "í": "i2",
+        "ǐ": "i3",
+        "ì": "i4",
+        "ō": "o1",
+        "ó": "o2",
+        "ǒ": "o3",
+        "ò": "o4",
+        "ū": "u1",
+        "ú": "u2",
+        "ǔ": "u3",
+        "ù": "u4",
+        "ǖ": "u5",
+        "ǘ": "u6",
+        "ǚ": "u7",
+        "ǜ": "u8",
+      };
       newWord.replaceAllMapped(
-          RegExp(r"(ā|á|ǎ|à|ē|é|ě|è|ī|í|ǐ|ì|ō|ó|ǒ|ò|ū|ú|ǔ|ù|ǖ|ǘ|ǚ|ǜ)", unicode: true),
-          (match) {return pinyinToNumber[match[0]]!;}
-      );
+          RegExp(r"(ā|á|ǎ|à|ē|é|ě|è|ī|í|ǐ|ì|ō|ó|ǒ|ò|ū|ú|ǔ|ù|ǖ|ǘ|ǚ|ǜ)",
+              unicode: true), (match) {
+        return pinyinToNumber[match[0]]!;
+      });
       newWord = "'%$newWord%'";
-    }else if(RegExp(r"\p{Script=Hani}", unicode: true).hasMatch(newWord)){
-      column = "hanzi"; newWord = "'%$newWord%'";
-    }else{
+    } else if (RegExp(r"\p{Script=Hani}", unicode: true).hasMatch(newWord)) {
+      column = "hanzi";
+      newWord = "'%$newWord%'";
+    } else {
       newWord = "'%$newWord%'";
       column = "translations[1]";
     }
@@ -213,7 +281,8 @@ class SQLHelper {
       limit 100)
     """;
     print(sql);
-    List<Map<String, Map<String, dynamic>>> results = await db.mappedResultsQuery(sql);
+    List<Map<String, Map<String, dynamic>>> results =
+        await db.mappedResultsQuery(sql);
     print(await results);
     List<Map<String, dynamic>> result = [];
     for (final row in results) {
@@ -224,7 +293,8 @@ class SQLHelper {
 
   static Future<List<Map<String, dynamic>>> getUnit(int unit) async {
     final db = await SQLHelper.psql();
-    List<Map<String, Map<String, dynamic>>> results = await db.mappedResultsQuery("""
+    List<Map<String, Map<String, dynamic>>> results =
+        await db.mappedResultsQuery("""
       SELECT
         id, hanzi, pinyin, translations0, subunit
       FROM courses  
@@ -238,9 +308,11 @@ class SQLHelper {
     return result;
   }
 
-  static Future<List<Map<String, dynamic>>> getUnitWithMissingSentences(int unit) async {
+  static Future<List<Map<String, dynamic>>> getUnitWithMissingSentences(
+      int unit) async {
     final db = await SQLHelper.psql();
-    List<Map<String, Map<String, dynamic>>> results = await db.mappedResultsQuery("""  
+    List<Map<String, Map<String, dynamic>>> results =
+        await db.mappedResultsQuery("""
     select  cte_2.id, cte_2.hanzi, cte_2.pinyin, cte_2.translations0, cte_2.subunit, cte_2.completed from(
     select DISTINCT on (cte.id)  cte.id, cte.hanzi, cte.pinyin, cte.translations0, cte.subunit, cte.completed from
       (select
@@ -260,7 +332,7 @@ class SQLHelper {
     """);
     List<Map<String, dynamic>> result = [];
     for (final row in results) {
-      final Map<String, dynamic> combined = { ...row[""]!};
+      final Map<String, dynamic> combined = {...row[""]!};
       result.add(combined);
     }
     return result;
@@ -268,7 +340,8 @@ class SQLHelper {
 
   static Future<List<Map<String, dynamic>>> getSentences(int unit) async {
     final db = await SQLHelper.psql();
-    List<Map<String, Map<String, dynamic>>> results = await db.mappedResultsQuery("""
+    List<Map<String, Map<String, dynamic>>> results =
+        await db.mappedResultsQuery("""
       SELECT
         characters, pinyin, meaning, id, subunit
       FROM sentences  
@@ -284,7 +357,8 @@ class SQLHelper {
 
   static Future<List<Map<String, dynamic>>> getLiteralDefinitions() async {
     final db = await SQLHelper.psql();
-    List<Map<String, Map<String, dynamic>>> results = await db.mappedResultsQuery("""
+    List<Map<String, Map<String, dynamic>>> results =
+        await db.mappedResultsQuery("""
       select * from literal_translations 
       join courses on courses.id = literal_translations.word_id
       where literal_translation is null and hsk < 5
@@ -298,15 +372,21 @@ class SQLHelper {
 
   static Future<void> setLiteralTranslation(int id, int wordId) async {
     final db = await SQLHelper.psql();
-    db.execute("update courses set literal_translation = $id where id = $wordId");
+    db.execute(
+        "update courses set literal_translation = $id where id = $wordId");
   }
 
-  static Future<void> setUnitOrder({required int unit, required int order}) async {
+  static Future<void> setUnitOrder(
+      {required int unit, required int order}) async {
     final db = await SQLHelper.psql();
     db.execute("update units set unit_order = $order where unit_id = $unit");
   }
 
-  static void swapUnits({required int pressedUnit, required int swapUnit, required String pressedName, required String swapName}) async {
+  static void swapUnits(
+      {required int pressedUnit,
+      required int swapUnit,
+      required String pressedName,
+      required String swapName}) async {
     final db = await SQLHelper.psql();
     db.execute("""
       BEGIN;
@@ -327,7 +407,10 @@ class SQLHelper {
     """);
   }
 
-  static void insertUnitAt({required int pressedUnit, required int unitInsertNum,}) async {
+  static void insertUnitAt({
+    required int pressedUnit,
+    required int unitInsertNum,
+  }) async {
     final db = await SQLHelper.psql();
     db.execute("""
       BEGIN;
@@ -348,20 +431,26 @@ class SQLHelper {
     """);
   }
 
-  static Future<void> updateUnitName({required int id, required String newName}) async {
+  static Future<void> updateUnitName(
+      {required int id, required String newName}) async {
     final db = await SQLHelper.psql();
-    db.execute("update units set unit_name = @a where unit_id = $id", substitutionValues: {"a": newName});
+    db.execute("update units set unit_name = @a where unit_id = $id",
+        substitutionValues: {"a": newName});
   }
 
-  static Future<void> updateVisibility({required int id, required int newVisibility}) async {
+  static Future<void> updateVisibility(
+      {required int id, required int newVisibility}) async {
     final db = await SQLHelper.psql();
-    db.execute("update units set visible = @a where unit_id = $id", substitutionValues: {"a": newVisibility});
+    db.execute("update units set visible = @a where unit_id = $id",
+        substitutionValues: {"a": newVisibility});
   }
 
-
-  static void createNewUnit({required String name, required int? hsk, required String course}) async {
+  static void createNewUnit(
+      {required String name, required int? hsk, required String course}) async {
     final db = await SQLHelper.psql();
-    db.execute("insert into units (course, unit_name, hsk) values (@a, @b, $hsk)", substitutionValues: {"a": course, "b": name});
+    db.execute(
+        "insert into units (course, unit_name, hsk) values (@a, @b, $hsk)",
+        substitutionValues: {"a": course, "b": name});
   }
 
   static void setUnitHskLevel({required int unit, required int hsk}) async {
@@ -369,15 +458,21 @@ class SQLHelper {
     db.execute("update units set hsk = $hsk where unit_id = $unit");
   }
 
-  static void addWordToCustomCourse({required String course, required String hanzi, required String pinyin, required String translations0, int? unit,}) async {
+  static void addWordToCustomCourse({
+    required String course,
+    required String hanzi,
+    required String pinyin,
+    required String translations0,
+    int? unit,
+  }) async {
     final db = await SQLHelper.psql();
     late String sql;
-    if (unit == null){
+    if (unit == null) {
       sql = """INSERT into 
         courses (course, hanzi, pinyin, translations0 ) 
         VALUES ('$course', '$hanzi', '$pinyin', '$translations0')
         """;
-    }else{
+    } else {
       sql = """INSERT into 
         courses (course, hanzi, pinyin, translations0, unit, subunit) 
         VALUES ('$course', '$hanzi', '$pinyin', '$translations0', '$unit', 1)
@@ -386,7 +481,10 @@ class SQLHelper {
     db.execute(sql);
   }
 
-  static void mergeUnits({required int pressedUnit, required int mergeUnit,}) async {
+  static void mergeUnits({
+    required int pressedUnit,
+    required int mergeUnit,
+  }) async {
     final db = await SQLHelper.psql();
     final int lowerUnit = pressedUnit > mergeUnit ? mergeUnit : pressedUnit;
     final int higherUnit = pressedUnit > mergeUnit ? pressedUnit : mergeUnit;
@@ -407,6 +505,4 @@ class SQLHelper {
       COMMIT;
     """);
   }
-
 }
-
